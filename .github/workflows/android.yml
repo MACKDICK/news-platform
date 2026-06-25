@@ -14,15 +14,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Bajamos a Node 20 para máxima compatibilidad con proyectos React/Capacitor actuales
+      # Forzamos Node 24 en consistencia con las políticas de ejecución vigentes de GitHub
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
-      # Usamos 'npm ci' en lugar de 'npm install' para evitar errores de dependencias en servidores limpios
+      # Instalación limpia ignorando conflictos estrictos de revisión de pares antiguos
       - name: Install dependencies
-        run: npm ci || npm install --legacy-peer-deps
+        run: npm install --legacy-peer-deps
 
       - name: Build React
         run: npm run build
