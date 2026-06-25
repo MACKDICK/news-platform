@@ -39,15 +39,30 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      # Compilación universal compatible con todos los procesadores móviles (ARM/ARM64)
       - name: Build APK
         working-directory: ./frontend/android
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug -Pandroid.bundle.enableSplit=false
 
+      # PASO CLAVE: Firma y alinea el APK automáticamente para que Android lo acepte
+      - name: Sign APK for Testing
+        run: |
+          # 1. Encontrar las herramientas de construcción de Android (Build Tools)
+          BUILD_TOOLS_DIR=$(dirname $(find $ANDROID_HOME/build-tools -name "apksigner" | head -n 1))
+          
+          # 2. Generar un almacén de llaves (Keystore) temporal de depuración
+          keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          
+          # 3. Alinear el APK generado para optimizar su lectura en el celular
+          $BUILD_TOOLS_DIR/zipalign -v 4 frontend/android/app/build/outputs/apk/debug/app-debug.apk app-aligned.apk
+          
+          # 4. Firmar el APK usando la llave temporal creada
+          $BUILD_TOOLS_DIR/apksigner sign --keystore debug.keystore --storepass android --keypass android --out NewsPlatform-Final.apk app-aligned.apk
+
+      # Subimos el archivo ya verificado y firmado listo para usar
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: NewsPlatform-APK
-          path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
+          path: NewsPlatform-Final.apk
