@@ -10,11 +10,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    # Definimos la carpeta del proyecto una sola vez para todo el proceso
-    defaults:
-      run:
-        working-directory: news-platform
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,12 +20,15 @@ jobs:
           node-version: 24
 
       - name: Install dependencies
+        working-directory: ./news-platform
         run: npm install --legacy-peer-deps
 
       - name: Build React
+        working-directory: ./news-platform
         run: npm run build
 
       - name: Capacitor Sync
+        working-directory: ./news-platform
         run: |
           npx cap add android || true
           npx cap sync android
@@ -41,14 +39,12 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      # Como ya estamos dentro de 'news-platform', solo entramos a 'android'
       - name: Build APK
+        working-directory: ./news-platform/android
         run: |
-          cd android
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      # Ajustamos la ruta relativa para encontrar y subir el APK generado
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
