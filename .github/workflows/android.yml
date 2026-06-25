@@ -19,17 +19,14 @@ jobs:
         with:
           node-version: 24
 
-      # Entramos a la carpeta frontend para instalar las librerías
       - name: Install dependencies
         working-directory: ./frontend
         run: npm install --legacy-peer-deps
 
-      # Compilamos React dentro de frontend
       - name: Build React
         working-directory: ./frontend
         run: npm run build
 
-      # Sincronizamos Capacitor dentro de frontend
       - name: Capacitor Sync
         working-directory: ./frontend
         run: |
@@ -42,14 +39,13 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      # Entramos a la subcarpeta de Android que está dentro de frontend
+      # Compilación universal compatible con todos los procesadores móviles (ARM/ARM64)
       - name: Build APK
         working-directory: ./frontend/android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug -Pandroid.bundle.enableSplit=false
 
-      # Ajustamos la ruta final exacta del archivo APK generado para subirlo
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
