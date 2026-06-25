@@ -14,6 +14,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ESTE PASO NOS DIRÁ EL NOMBRE REAL DE TU CARPETA
+      - name: Listar archivos del repositorio
+        run: ls -la
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -21,29 +25,3 @@ jobs:
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps
-
-      - name: Build React
-        run: npm run build
-
-      - name: Capacitor Sync
-        run: |
-          npx cap add android || true
-          npx cap sync android
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-
-      - name: Build APK
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: NewsPlatform-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
