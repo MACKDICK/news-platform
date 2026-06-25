@@ -1,0 +1,38 @@
+services:
+
+  backend:
+    build:
+      context: ../backend
+    container_name: news_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../backend:/var/www
+    depends_on:
+      - mysql
+
+  frontend:
+    build:
+      context: ../frontend
+    container_name: news_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../frontend:/app
+    depends_on:
+      - backend
+
+  mysql:
+    image: mysql:8.0
+    container_name: news_mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: news_db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:

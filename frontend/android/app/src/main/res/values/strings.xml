@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">NewsPlatform</string>
+    <string name="title_activity_main">NewsPlatform</string>
+    <string name="package_name">vidarr.app</string>
+    <string name="custom_url_scheme">vidarr.app</string>
+</resources>
