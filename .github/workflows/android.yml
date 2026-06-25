@@ -20,15 +20,12 @@ jobs:
           node-version: 24
 
       - name: Install dependencies
-        working-directory: ./news-platform
         run: npm install --legacy-peer-deps
 
       - name: Build React
-        working-directory: ./news-platform
         run: npm run build
 
       - name: Capacitor Sync
-        working-directory: ./news-platform
         run: |
           npx cap add android || true
           npx cap sync android
@@ -40,8 +37,8 @@ jobs:
           java-version: 21
 
       - name: Build APK
-        working-directory: ./news-platform/android
         run: |
+          cd android
           chmod +x gradlew
           ./gradlew assembleDebug
 
@@ -49,4 +46,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: NewsPlatform-APK
-          path: news-platform/android/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
