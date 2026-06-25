@@ -1,6 +1,9 @@
 name: Build Android APK
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -23,7 +26,9 @@ jobs:
         run: npm run build
 
       - name: Capacitor Sync
-        run: npx cap sync android
+        run: |
+          npx cap add android || true
+          npx cap sync android
 
       - name: Setup Java
         uses: actions/setup-java@v4
