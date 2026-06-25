@@ -14,14 +14,44 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ESTE PASO NOS DIRÁ EL NOMBRE REAL DE TU CARPETA
-      - name: Listar archivos del repositorio
-        run: ls -la
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 24
 
+      # Entramos a la carpeta frontend para instalar las librerías
       - name: Install dependencies
+        working-directory: ./frontend
         run: npm install --legacy-peer-deps
+
+      # Compilamos React dentro de frontend
+      - name: Build React
+        working-directory: ./frontend
+        run: npm run build
+
+      # Sincronizamos Capacitor dentro de frontend
+      - name: Capacitor Sync
+        working-directory: ./frontend
+        run: |
+          npx cap add android || true
+          npx cap sync android
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # Entramos a la subcarpeta de Android que está dentro de frontend
+      - name: Build APK
+        working-directory: ./frontend/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      # Ajustamos la ruta final exacta del archivo APK generado para subirlo
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: NewsPlatform-APK
+          path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
