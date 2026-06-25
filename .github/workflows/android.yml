@@ -14,38 +14,51 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Forzamos Node 24 en consistencia con las políticas de ejecución vigentes de GitHub
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 24
 
-      # Instalación limpia ignorando conflictos estrictos de revisión de pares antiguos
+      # Indicamos que busque el package.json dentro de tu subcarpeta
       - name: Install dependencies
+        defaults:
+          run:
+            working-directory: news-platform
         run: npm install --legacy-peer-deps
 
+      # Indicamos que compile React dentro de tu subcarpeta
       - name: Build React
+        defaults:
+          run:
+            working-directory: news-platform
         run: npm run build
 
+      # Indicamos que sincronice Capacitor dentro de tu subcarpeta
       - name: Capacitor Sync
+        defaults:
+          run:
+            working-directory: news-platform
         run: |
           npx cap add android || true
           npx cap sync android
 
+      # Java se configura de forma global, no necesita subcarpeta
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
 
+      # Entramos a la ruta correcta de android para compilar el APK
       - name: Build APK
         run: |
-          cd android
+          cd news-platform/android
           chmod +x gradlew
           ./gradlew assembleDebug
 
+      # Subimos el APK final ajustando también su ruta con la subcarpeta
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: NewsPlatform-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: news-platform/android/app/build/outputs/apk/debug/app-debug.apk
