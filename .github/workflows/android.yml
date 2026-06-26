@@ -45,23 +45,19 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug -Pandroid.bundle.enableSplit=false
 
-      # COMANDO MANUAL CORRECTO: Encuentra la versión real de build-tools en el servidor y firma el APK
+      # Método nativo de Java para firmar archivos de forma directa y limpia
       - name: Sign APK manually
         run: |
-          # 1. Encontrar la ruta real de apksigner y zipalign instalada en el servidor de GitHub
-          BUILD_TOOLS_DIR=$(dirname $(find $ANDROID_HOME/build-tools -name "apksigner" | sort -V | tail -n 1))
-          echo "Usando las herramientas de Android ubicadas en: $BUILD_TOOLS_DIR"
-          
-          # 2. Generar una llave de depuración (Keystore) estándar en la raíz del servidor
+          # 1. Crear el almacen de llaves temporal
           keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
           
-          # 3. Alinear el APK generado por Gradle
-          $BUILD_TOOLS_DIR/zipalign -v 4 frontend/android/app/build/outputs/apk/debug/app-debug.apk app-aligned.apk
+          # 2. Firmar el archivo APK usando las herramientas nativas de Java
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore debug.keystore -storepass android -keypass android frontend/android/app/build/outputs/apk/debug/app-debug.apk androiddebugkey
           
-          # 4. Firmar digitalmente el APK para que Android lo reconozca como válido
-          $BUILD_TOOLS_DIR/apksigner sign --keystore debug.keystore --storepass android --keypass android --out NewsPlatform-Instalable.apk app-aligned.apk
+          # 3. Mover y renombrar el archivo firmado a la raíz para la descarga
+          cp frontend/android/app/build/outputs/apk/debug/app-debug.apk NewsPlatform-Instalable.apk
 
-      # Subimos el APK que ya contiene la firma digital verificada
+      # Subimos el archivo final verificado
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
