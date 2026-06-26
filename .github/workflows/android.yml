@@ -39,14 +39,14 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # COMPILACIÓN LIMPIA: Dejamos que Gradle compile usando su configuración de depuración por defecto
+      # CORRECCIÓN: Otorgamos permisos completos a la carpeta y al archivo ejecutable gradlew
       - name: Build APK with Gradle
         working-directory: ./frontend/android
         run: |
+          chmod -R +x .
           chmod +x gradlew
           ./gradlew assembleDebug -Pandroid.bundle.enableSplit=false
 
-      # Subimos el APK resultante
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
