@@ -33,7 +33,6 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # ACCIÓN CONTROLADA: Instala las herramientas CLI de Capacitor para evitar fallos de comandos globales
       - name: Initialize Capacitor Android
         working-directory: ./frontend
         run: |
@@ -41,15 +40,15 @@ jobs:
           npx cap add android || true
           npx cap sync android
 
-      # COMPILACIÓN DIRECTA: Forzamos la ejecución delegando el entorno al wrapper de Gradle
       - name: Build APK with Gradle
         working-directory: ./frontend/android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon -Pandroid.bundle.enableSplit=false
+          ./gradlew assembleDebug --no-daemon
 
+      # CORRECCIÓN DE RUTA: Buscamos de manera dinámica cualquier paquete .apk generado en el árbol de archivos
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: NewsPlatform-APK
-          path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
+          path: frontend/android/app/build/outputs/**/*.apk
