@@ -39,18 +39,14 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # CONFIGURACIÓN INTEGRADA: Creamos el keystore y dejamos que Gradle compile y firme con esquemas V2/V3 nativamente
-      - name: Build and Sign APK with Gradle
+      # COMPILACIÓN LIMPIA: Dejamos que Gradle compile usando su configuración de depuración por defecto
+      - name: Build APK with Gradle
         working-directory: ./frontend/android
         run: |
-          # 1. Generar la firma de depuración estándar en la carpeta de Android
-          keytool -genkey -v -keystore app/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
-          
-          # 2. Dar permisos y compilar. Gradle usará este keystore e inyectará los esquemas V2 y V3 automáticamente.
           chmod +x gradlew
           ./gradlew assembleDebug -Pandroid.bundle.enableSplit=false
 
-      # Subimos el APK nativo generado por Gradle que ya incluye las firmas necesarias
+      # Subimos el APK resultante
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
