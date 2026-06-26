@@ -27,7 +27,6 @@ jobs:
         working-directory: ./frontend
         run: npm run build
 
-      # REGRESAMOS A JAVA 21: Es la versión obligatoria que tu proyecto exige para inicializarse
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -41,14 +40,16 @@ jobs:
           npx cap add android || true
           npx cap sync android
 
-      # COMPILACIÓN FORZADA: Agregamos parámetros para obligar a Java 21 a generar bytecode compatible con Android 11
+      # LA SOLUCIÓN DEFINITIVA: Forzamos a Java 21 a traducir el código a opciones compatibles con Android 11
       - name: Build APK with Gradle
         working-directory: ./frontend/android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon -Pandroid.bundle.enableSplit=false
+          ./gradlew assembleDebug --no-daemon \
+            -Dorg.gradle.jvmargs="-Xmx2048m" \
+            -Pandroid.compileOptions.sourceCompatibility=VERSION_17 \
+            -Pandroid.compileOptions.targetCompatibility=VERSION_17
 
-      # Subimos dinámicamente cualquier APK generado
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
