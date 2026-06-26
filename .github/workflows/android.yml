@@ -27,11 +27,12 @@ jobs:
         working-directory: ./frontend
         run: npm run build
 
+      # REGRESAMOS A JAVA 21: Es la versión obligatoria que tu proyecto exige para inicializarse
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
 
       - name: Initialize Capacitor Android
         working-directory: ./frontend
@@ -40,13 +41,14 @@ jobs:
           npx cap add android || true
           npx cap sync android
 
+      # COMPILACIÓN FORZADA: Agregamos parámetros para obligar a Java 21 a generar bytecode compatible con Android 11
       - name: Build APK with Gradle
         working-directory: ./frontend/android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug --no-daemon -Pandroid.bundle.enableSplit=false
 
-      # CORRECCIÓN DE RUTA: Buscamos de manera dinámica cualquier paquete .apk generado en el árbol de archivos
+      # Subimos dinámicamente cualquier APK generado
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
