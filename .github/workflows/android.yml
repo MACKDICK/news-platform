@@ -39,30 +39,20 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Build APK
+      # CONFIGURACIÓN INTEGRADA: Creamos el keystore y dejamos que Gradle compile y firme con esquemas V2/V3 nativamente
+      - name: Build and Sign APK with Gradle
         working-directory: ./frontend/android
         run: |
+          # 1. Generar la firma de depuración estándar en la carpeta de Android
+          keytool -genkey -v -keystore app/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          
+          # 2. Dar permisos y compilar. Gradle usará este keystore e inyectará los esquemas V2 y V3 automáticamente.
           chmod +x gradlew
           ./gradlew assembleDebug -Pandroid.bundle.enableSplit=false
 
-      # SECCIÓN CORREGIDA: Usamos la ruta estática oficial del servidor de GitHub para evitar fallos de búsqueda
-      - name: Sign APK with V2/V3 Scheme
-        run: |
-          # 1. Definir la ruta directa de build-tools (Versión estable en los runners de GitHub)
-          BUILD_TOOLS_DIR="/usr/local/lib/android/sdk/build-tools/34.0.0"
-          
-          # 2. Generar el almacén de llaves temporal de depuración
-          keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
-          
-          # 3. Alinear el archivo APK utilizando la ruta estática
-          $BUILD_TOOLS_DIR/zipalign -v 4 frontend/android/app/build/outputs/apk/debug/app-debug.apk app-aligned.apk
-          
-          # 4. Firmar con apksigner (Inyecta la firma V2/V3 requerida por Android 11)
-          $BUILD_TOOLS_DIR/apksigner sign --keystore debug.keystore --storepass android --keypass android --out NewsPlatform-Redmi.apk app-aligned.apk
-
-      # Subimos el APK final generado
+      # Subimos el APK nativo generado por Gradle que ya incluye las firmas necesarias
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: NewsPlatform-APK
-          path: NewsPlatform-Redmi.apk
+          path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
