@@ -37,8 +37,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17 # <--- Cambiamos de 21 a 17 para máxima compatibilidad
-
+          java-version: 17
 
       - name: Build APK
         working-directory: ./frontend/android
@@ -46,21 +45,25 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug -Pandroid.bundle.enableSplit=false
 
-      # Método nativo de Java para firmar archivos de forma directa y limpia
-      - name: Sign APK manually
+      # SECCIÓN CORREGIDA: Busca dinámicamente apksigner para inyectar firma V2/V3 requerida por Android 11
+      - name: Sign APK with V2/V3 Scheme
         run: |
-          # 1. Crear el almacen de llaves temporal
+          # 1. Localizar la carpeta build-tools más reciente del servidor
+          BUILD_TOOLS_DIR=$(dirname $(find $ANDROID_HOME/build-tools -name "apksigner" | sort -V | tail -n 1))
+          echo "Usando herramientas de Android en: $BUILD_TOOLS_DIR"
+          
+          # 2. Generar el almacén de llaves temporal de depuración
           keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
           
-          # 2. Firmar el archivo APK usando las herramientas nativas de Java
-          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore debug.keystore -storepass android -keypass android frontend/android/app/build/outputs/apk/debug/app-debug.apk androiddebugkey
+          # 3. Alinear el archivo APK (Paso obligatorio antes de usar apksigner)
+          $BUILD_TOOLS_DIR/zipalign -v 4 frontend/android/app/build/outputs/apk/debug/app-debug.apk app-aligned.apk
           
-          # 3. Mover y renombrar el archivo firmado a la raíz para la descarga
-          cp frontend/android/app/build/outputs/apk/debug/app-debug.apk NewsPlatform-Instalable.apk
+          # 4. Firmar con apksigner (Aplica firma V2/V3 nativa)
+          $BUILD_TOOLS_DIR/apksigner sign --keystore debug.keystore --storepass android --keypass android --out NewsPlatform-Redmi.apk app-aligned.apk
 
-      # Subimos el archivo final verificado
+      # Subimos el APK listo para Android 11
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: NewsPlatform-APK
-          path: NewsPlatform-Instalable.apk
+          path: NewsPlatform-Redmi.apk
